@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>نظام إدارة طلبات الذكاء الاصطناعي</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --brand:#0a6b5f; --brand2:#0c7a6d;
+      --ink:#0f172a; --muted:#64748b;
+      --bg:#f6f8fb; --card:#ffffff; --stroke:#e5e7eb;
+      --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626;
+      --shadow: 0 10px 30px rgba(2,6,23,.08);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:"Cairo",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+    .container{max-width:1200px;margin:0 auto;padding:18px}
+    .topbar{background:#fff;border-bottom:1px solid var(--stroke);position:sticky;top:0;z-index:50}
+    .topbar-inner{display:flex;align-items:center;gap:14px;justify-content:space-between;padding:14px 18px;max-width:1200px;margin:0 auto}
+    .brand{display:flex;align-items:center;gap:12px;min-width:260px}
+    .brand img{width:44px;height:44px;border-radius:12px;object-fit:cover;border:1px solid var(--stroke);background:#fff}
+    .brand .t{display:flex;flex-direction:column;line-height:1.15}
+    .brand .t strong{font-weight:800}
+    .brand .t span{color:var(--muted);font-size:12.5px}
+    .nav{display:flex;gap:10px;flex-wrap:wrap}
+    .tab{border:1px solid var(--stroke);background:#fff;color:var(--ink);padding:10px 14px;border-radius:999px;cursor:pointer;font-weight:700;transition:.15s ease}
+    .tab.active{background:rgba(10,107,95,.08);border-color:rgba(10,107,95,.25);color:var(--brand)}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(10,107,95,.08);border:1px solid rgba(10,107,95,.18);color:var(--brand);font-weight:800;font-size:13px;white-space:nowrap}
+    .grid{display:grid;gap:14px}
+    @media (min-width:980px){.grid.cols-2{grid-template-columns:1.1fr .9fr}.grid.cols-3{grid-template-columns:repeat(3,1fr)}.grid.cols-4{grid-template-columns:repeat(4,1fr)}}
+    .card{background:var(--card);border:1px solid var(--stroke);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+    .card h2,.card h3{margin:0 0 10px 0}
+    .sub{color:var(--muted);font-size:13px;margin-top:-4px}
+    .hero{border-radius:var(--radius);background:linear-gradient(135deg,rgba(10,107,95,.10),rgba(10,107,95,.04));border:1px solid rgba(10,107,95,.18);padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .hero h1{margin:0;font-size:22px}
+    .hero p{margin:6px 0 0 0;color:var(--muted);font-size:13.5px;max-width:700px}
+    .btn{border:1px solid var(--stroke);background:#fff;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:800;transition:.15s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+    .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    .btn.primary:hover{filter:brightness(.98)}
+    .btn.ghost:hover{background:#f2f4f8}
+    .btn.danger{border-color:rgba(220,38,38,.3);color:var(--bad)}
+    .btn.small{padding:7px 10px;border-radius:10px;font-size:13px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .spacer{height:14px}
+    label{display:block;font-weight:800;margin:10px 0 6px}
+    input,select,textarea{width:100%;border:1px solid var(--stroke);border-radius:12px;padding:11px 12px;font-family:inherit;font-size:14px;background:#fff;outline:none;transition:.15s ease}
+    input:focus,select:focus,textarea:focus{border-color:rgba(10,107,95,.45);box-shadow:0 0 0 4px rgba(10,107,95,.10)}
+    textarea{min-height:110px;resize:vertical}
+    .hint{color:var(--muted);font-size:12.5px;margin-top:6px}
+    .stat{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;padding:14px;border-radius:14px;border:1px solid var(--stroke);background:linear-gradient(180deg,#fff,#fbfdff)}
+    .stat .k{color:var(--muted);font-weight:800;font-size:13px}
+    .stat .v{font-size:28px;font-weight:900;line-height:1}
+    .stat .tag{font-size:12px;font-weight:900;padding:6px 10px;border-radius:999px;border:1px solid var(--stroke);background:#fff;color:var(--muted)}
+    .tag.ok{color:var(--ok);border-color:rgba(22,163,74,.25);background:rgba(22,163,74,.06)}
+    .tag.warn{color:var(--warn);border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.07)}
+    .tag.bad{color:var(--bad);border-color:rgba(220,38,38,.25);background:rgba(220,38,38,.06)}
+    .barlist{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+    .bar{display:grid;grid-template-columns:160px 1fr 48px;gap:10px;align-items:center}
+    @media (max-width:720px){.bar{grid-template-columns:1fr}.bar .pct{justify-self:start}}
+    .bar .name{font-weight:900}
+    .track{height:10px;border-radius:999px;background:#eef2f7;border:1px solid var(--stroke);overflow:hidden}
+    .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--brand),var(--brand2));border-radius:999px}
+    .pct{color:var(--muted);font-weight:900;font-size:12px;justify-self:end}
+    .table-wrap{overflow:auto;border:1px solid var(--stroke);border-radius:14px}
+    table{width:100%;border-collapse:separate;border-spacing:0;min-width:980px;background:#fff}
+    th,td{padding:12px 10px;border-bottom:1px solid var(--stroke);vertical-align:top}
+    th{position:sticky;top:0;background:#fbfcfe;text-align:right;font-size:13px;color:var(--muted)}
+    tr:hover td{background:#fafcff}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12.5px}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--stroke);font-weight:900;font-size:12px;white-space:nowrap;background:#fff}
+    .badge.new{color:var(--brand);border-color:rgba(10,107,95,.25);background:rgba(10,107,95,.06)}
+    .badge.inprogress{color:#2563eb;border-color:rgba(37,99,235,.25);background:rgba(37,99,235,.06)}
+    .badge.done{color:var(--ok);border-color:rgba(22,163,74,.25);background:rgba(22,163,74,.06)}
+    .badge.late{color:var(--bad);border-color:rgba(220,38,38,.25);background:rgba(220,38,38,.06)}
+    .muted{color:var(--muted)}
+    .right{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+    .divider{height:1px;background:var(--stroke);margin:12px 0}
+    .toast{position:fixed;bottom:18px;left:18px;max-width:420px;padding:12px 14px;border-radius:14px;background:#0b1220;color:#fff;box-shadow:0 16px 40px rgba(0,0,0,.25);opacity:0;transform:translateY(10px);transition:.18s ease;z-index:1000}
+    .toast.show{opacity:1;transform:translateY(0)}
+    .footer{color:var(--muted);font-size:12.5px;padding:18px 0 26px;text-align:center}
+
+    /* Login */
+    .overlay{position:fixed;inset:0;background:rgba(2,6,23,.45);backdrop-filter: blur(6px);display:none;align-items:center;justify-content:center;z-index:999}
+    .login-card{width:min(520px, 92vw)}
+    .login-title{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .mini{font-size:12px;color:var(--muted);font-weight:800}
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img alt="شعار الهيئة" src="https://saudipedia.com/en/saudipediaen/uploads/images/2024/05/29/thumbs/600x600/90751.jpg">
+        <div class="t">
+          <strong>نظام إدارة طلبات الذكاء الاصطناعي</strong>
+          <span>بوابة الموظفين + لوحة تحكم المدير</span>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="tab active" id="tab-employee" type="button">بوابة الموظفين</button>
+        <button class="tab" id="tab-admin" type="button">لوحة التحكم</button>
+      </nav>
+
+      <div class="row">
+        <span class="pill" id="pill-now">اليوم: —</span>
+        <button class="btn small ghost" id="btn-login" type="button">تسجيل الدخول</button>
+        <button class="btn small danger" id="btn-logout" type="button" style="display:none">تسجيل الخروج</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Login Overlay -->
+  <div class="overlay" id="loginOverlay" aria-hidden="true">
+    <div class="card login-card">
+      <div class="login-title">
+        <div>
+          <h2 style="margin:0 0 4px 0">تسجيل الدخول</h2>
+          <div class="sub">اختر الدور وسجّل الدخول للوصول للواجهة المناسبة.</div>
+        </div>
+        <span class="pill" id="sessionPill">غير مسجّل</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <label>الدور</label>
+      <select id="loginRole">
+        <option value="EMPLOYEE">موظف</option>
+        <option value="ADMIN">مدير</option>
+      </select>
+
+      <div class="grid cols-2">
+        <div>
+          <label>اسم المستخدم</label>
+          <input id="loginUser" placeholder="مثال: employee" />
+        </div>
+        <div>
+          <label>كلمة المرور</label>
+          <input id="loginPass" type="password" placeholder="••••••••" />
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:space-between;margin-top:14px">
+        <div class="row">
+          <button class="btn primary" id="doLogin" type="button">دخول</button>
+          <button class="btn ghost" id="closeLogin" type="button">إغلاق</button>
+        </div>
+        <div class="mini">
+          افتراضيًا: موظف employee/1234 • مدير admin/admin123
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <!-- Employee -->
+    <section id="view-employee">
+      <div class="hero">
+        <div>
+          <h1>تقديم طلب ذكاء اصطناعي</h1>
+          <p>
+            اختر نوع الطلب، عبّئ التفاصيل، وسنقوم بتتبع الحالة حتى الإنجاز.
+            <strong>طلب أداة AI</strong>، <strong>طلب تطبيق مولّد</strong>، أو <strong>طلب ورشة عمل</strong>.
+          </p>
+        </div>
+        <div class="row">
+          <button class="btn ghost" id="btn-seed" type="button">إضافة بيانات تجريبية</button>
+          <button class="btn danger" id="btn-reset" type="button">مسح جميع البيانات</button>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="grid cols-2">
+        <div class="card">
+          <h2>نموذج الطلب</h2>
+          <div class="sub">سيتم حفظ الطلب فور الإرسال ويمكن للإدارة تحديث الحالة.</div>
+
+          <form id="request-form" autocomplete="off">
+            <div class="grid cols-2">
+              <div>
+                <label>اسم الموظف</label>
+                <input required id="empName" placeholder="مثال: أحمد محمد" />
+              </div>
+              <div>
+                <label>البريد الإلكتروني</label>
+                <input required id="empEmail" type="email" placeholder="name@company.com" />
+              </div>
+            </div>
+
+            <div class="grid cols-2">
+              <div>
+                <label>الإدارة / القسم</label>
+                <select required id="department">
+                  <option value="" selected disabled>اختر…</option>
+                  <option>تقنية المعلومات</option>
+                  <option>التحول الرقمي</option>
+                  <option>الموارد البشرية</option>
+                  <option>المالية</option>
+                  <option>الاتصال المؤسسي</option>
+                  <option>المشاريع</option>
+                  <option>أخرى</option>
+                </select>
+              </div>
+
+              <div>
+                <label>نوع الطلب</label>
+                <select required id="reqType">
+                  <option value="" selected disabled>اختر…</option>
+                  <option value="AI_TOOL">🔧 طلب أداة ذكاء اصطناعي</option>
+                  <option value="AI_APP">📱 طلب تطبيق مُولَّد بالذكاء الاصطناعي</option>
+                  <option value="AI_WORKSHOP">🎓 طلب ورشة عمل ذكاء اصطناعي</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid cols-2">
+              <div>
+                <label>الأولوية</label>
+                <select required id="priority">
+                  <option value="عادية" selected>عادية</option>
+                  <option value="عالية">عالية</option>
+                  <option value="عاجلة">عاجلة</option>
+                </select>
+              </div>
+              <div>
+                <label>تاريخ الاستحقاق المطلوب</label>
+                <input required id="dueDate" type="date" />
+                <div class="hint">سيُعتبر الطلب “متأخر” إذا تجاوز تاريخ الاستحقاق ولم يكتمل.</div>
+              </div>
+            </div>
+
+            <label>عنوان مختصر للطلب</label>
+            <input required id="title" placeholder="مثال: أتمتة تلخيص محاضر الاجتماعات" />
+
+            <label>وصف تفصيلي</label>
+            <textarea required id="details" placeholder="اكتب المشكلة، الهدف، المستخدمين، البيانات المتاحة، مخرجات متوقعة…"></textarea>
+
+            <div class="row" style="justify-content:space-between;margin-top:14px">
+              <div class="row">
+                <button class="btn primary" type="submit">إرسال الطلب</button>
+                <button class="btn ghost" id="btn-clear-form" type="button">تفريغ النموذج</button>
+              </div>
+              <span class="pill" id="pill-count">عدد الطلبات: 0</span>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>آخر 5 طلبات</h2>
+          <div id="recent" class="barlist"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Admin -->
+    <section id="view-admin" style="display:none">
+      <div class="hero">
+        <div>
+          <h1>لوحة تحكم المدير</h1>
+          <p>إحصاءات فورية، توزيع حسب الإدارات وأنواع الطلبات، وقائمة شاملة مع فلاتر وتحديث حالات الطلب.</p>
+        </div>
+        <div class="row">
+          <button class="btn ghost" id="btn-export" type="button">تصدير JSON</button>
+          <button class="btn ghost" id="btn-import" type="button">استيراد JSON</button>
+          <input id="importFile" type="file" accept="application/json" style="display:none" />
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="grid cols-4">
+        <div class="stat"><div><div class="k">إجمالي الطلبات</div><div class="v" id="s-total">0</div></div><div class="tag">كل الأنواع</div></div>
+        <div class="stat"><div><div class="k">قيد المعالجة</div><div class="v" id="s-inprogress">0</div></div><div class="tag warn">In-Process</div></div>
+        <div class="stat"><div><div class="k">مكتملة</div><div class="v" id="s-done">0</div></div><div class="tag ok">Completed</div></div>
+        <div class="stat"><div><div class="k">متأخرة</div><div class="v" id="s-late">0</div></div><div class="tag bad">Late</div></div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="grid cols-2">
+        <div class="card">
+          <h2>حسب الإدارة</h2>
+          <div class="sub">توزيع الطلبات بحسب الإدارة.</div>
+          <div id="byDept" class="barlist"></div>
+        </div>
+
+        <div class="card">
+          <h2>حسب نوع الطلب</h2>
+          <div class="sub">🔧 أداة | 📱 تطبيق | 🎓 ورشة</div>
+          <div id="byType" class="barlist"></div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:flex-end">
+          <div>
+            <h2 style="margin-bottom:4px">قائمة الطلبات</h2>
+            <div class="sub">فلترة، عرض، وتحديث الحالة/الاستحقاق/ملاحظات الإدارة.</div>
+          </div>
+
+          <div class="right">
+            <div style="min-width:220px">
+              <label style="margin:0 0 6px">بحث</label>
+              <input id="q" placeholder="ابحث في العنوان/الوصف/الاسم…" />
+            </div>
+
+            <div style="min-width:180px">
+              <label style="margin:0 0 6px">الحالة</label>
+              <select id="fStatus">
+                <option value="ALL" selected>الكل</option>
+                <option value="NEW">جديد</option>
+                <option value="IN_PROGRESS">قيد المعالجة</option>
+                <option value="DONE">مكتمل</option>
+                <option value="LATE">متأخر</option>
+              </select>
+            </div>
+
+            <div style="min-width:200px">
+              <label style="margin:0 0 6px">النوع</label>
+              <select id="fType">
+                <option value="ALL" selected>الكل</option>
+                <option value="AI_TOOL">🔧 أداة AI</option>
+                <option value="AI_APP">📱 تطبيق AI</option>
+                <option value="AI_WORKSHOP">🎓 ورشة</option>
+              </select>
+            </div>
+
+            <div style="min-width:200px">
+              <label style="margin:0 0 6px">الإدارة</label>
+              <select id="fDept">
+                <option value="ALL" selected>الكل</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>المعرّف</th><th>الموظف</th><th>الإدارة</th><th>النوع</th><th>الأولوية</th>
+                <th>العنوان/الوصف</th><th>الإنشاء</th><th>الاستحقاق</th><th>الحالة</th><th>إجراءات المدير</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">© نموذج تجريبي يعمل محليًا (LocalStorage). تسجيل الدخول هنا “بسيط” للعرض فقط.</div>
+  </main>
+
+  <div class="toast" id="toast">تم.</div>
+
+  <script>
+    // -----------------------------
+    // SIMPLE LOGIN (front-end only)
+    // -----------------------------
+    const SESSION_KEY = "AI_RMS_SESSION_V1";
+    // غيّر بيانات الدخول هنا:
+    const CREDS = {
+      EMPLOYEE: { user: "employee", pass: "1234" },
+      ADMIN:    { user: "admin",    pass: "admin123" }
+    };
+
+    const loginOverlay = document.getElementById("loginOverlay");
+    const btnLogin = document.getElementById("btn-login");
+    const btnLogout = document.getElementById("btn-logout");
+    const sessionPill = document.getElementById("sessionPill");
+
+    const loginRole = document.getElementById("loginRole");
+    const loginUser = document.getElementById("loginUser");
+    const loginPass = document.getElementById("loginPass");
+    const doLogin = document.getElementById("doLogin");
+    const closeLogin = document.getElementById("closeLogin");
+
+    function getSession(){
+      try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch { return null; }
+    }
+    function setSession(s){
+      localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+      applyAuth();
+    }
+    function clearSession(){
+      localStorage.removeItem(SESSION_KEY);
+      applyAuth();
+    }
+    function openLogin(){
+      loginOverlay.style.display = "flex";
+      loginOverlay.setAttribute("aria-hidden","false");
+      const s = getSession();
+      sessionPill.textContent = s ? (s.role === "ADMIN" ? "مدير" : "موظف") : "غير مسجّل";
+      if(!loginUser.value) loginUser.value = (loginRole.value === "ADMIN") ? CREDS.ADMIN.user : CREDS.EMPLOYEE.user;
+      loginPass.focus();
+    }
+    function closeLoginModal(){
+      loginOverlay.style.display = "none";
+      loginOverlay.setAttribute("aria-hidden","true");
+    }
+
+    btnLogin.addEventListener("click", openLogin);
+    closeLogin.addEventListener("click", closeLoginModal);
+    loginOverlay.addEventListener("click", (e)=>{ if(e.target === loginOverlay) closeLoginModal(); });
+
+    loginRole.addEventListener("change", () => {
+      loginUser.value = (loginRole.value === "ADMIN") ? CREDS.ADMIN.user : CREDS.EMPLOYEE.user;
+      loginPass.value = "";
+      loginPass.focus();
+    });
+
+    doLogin.addEventListener("click", () => {
+      const role = loginRole.value;
+      const u = (loginUser.value||"").trim();
+      const p = (loginPass.value||"").trim();
+      const ok = (u === CREDS[role].user && p === CREDS[role].pass);
+      if(!ok){ toast("بيانات الدخول غير صحيحة."); return; }
+      setSession({ role, user: u, at: new Date().toISOString() });
+      toast("تم تسجيل الدخول ✅");
+      closeLoginModal();
+      if(role === "ADMIN") setView("ADM"); else setView("EMP");
+    });
+
+    btnLogout.addEventListener("click", () => {
+      clearSession();
+      toast("تم تسجيل الخروج.");
+      setView("EMP");
+    });
+
+    // -----------------------------
+    // App storage + helpers
+    // -----------------------------
+    const KEY = "AI_REQUESTS_V1";
+    const now = () => new Date();
+    const isoDate = (d) => d.toISOString().slice(0,10);
+    const fmtDate = (s) => {
+      if(!s) return "—";
+      const d = new Date(s + "T00:00:00");
+      return d.toLocaleDateString("ar-SA", {year:"numeric", month:"2-digit", day:"2-digit"});
+    };
+    const uid = () => "REQ-" + Date.now().toString().slice(-6) + "-" + Math.random().toString(16).slice(2,7).toUpperCase();
+    const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; } };
+    const save = (arr) => localStorage.setItem(KEY, JSON.stringify(arr));
+    const toast = (msg) => { const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); };
+
+    const typeLabel = (t) => ({AI_TOOL:"🔧 أداة AI", AI_APP:"📱 تطبيق AI", AI_WORKSHOP:"🎓 ورشة"}[t]||t);
+    const statusLabel = (s) => ({NEW:"جديد", IN_PROGRESS:"قيد المعالجة", DONE:"مكتمل", LATE:"متأخر"}[s]||s);
+    const statusBadgeClass = (s)=>({NEW:"new",IN_PROGRESS:"inprogress",DONE:"done",LATE:"late"}[s]||"new");
+    const computeLate = (req)=>{ if(req.status==="DONE"||!req.dueDate) return false; return now() > new Date(req.dueDate+"T23:59:59"); };
+    const normalizeStatuses = (requests)=>requests.map(r=>{
+      const late=computeLate(r);
+      if(late && r.status!=="LATE") return {...r,status:"LATE"};
+      if(!late && r.status==="LATE") return {...r,status:"IN_PROGRESS"};
+      return r;
+    });
+
+    // -----------------------------
+    // Initial UI setup
+    // -----------------------------
+    document.getElementById("pill-now").textContent = "اليوم: " + fmtDate(isoDate(now()));
+    const d0 = new Date(); d0.setDate(d0.getDate()+14);
+    document.getElementById("dueDate").value = isoDate(d0);
+
+    // Tabs & views
+    const tabEmp=document.getElementById("tab-employee");
+    const tabAdm=document.getElementById("tab-admin");
+    const viewEmp=document.getElementById("view-employee");
+    const viewAdm=document.getElementById("view-admin");
+
+    function setView(which){
+      const emp = which==="EMP";
+      tabEmp.classList.toggle("active", emp);
+      tabAdm.classList.toggle("active", !emp);
+      viewEmp.style.display = emp ? "" : "none";
+      viewAdm.style.display = emp ? "none" : "";
+      renderAll();
+    }
+
+    tabEmp.addEventListener("click", ()=>setView("EMP"));
+    tabAdm.addEventListener("click", ()=>{
+      const s = getSession();
+      if(!s || s.role !== "ADMIN"){
+        toast("هذه الصفحة للمدير فقط. سجّل دخول كمدير.");
+        openLogin();
+        return;
+      }
+      setView("ADM");
+    });
+
+    // Seed + reset
+    document.getElementById("btn-reset").addEventListener("click", () => {
+      if(confirm("هل تريد مسح جميع الطلبات؟")){
+        save([]); toast("تم مسح البيانات."); renderAll();
+      }
+    });
+
+    document.getElementById("btn-seed").addEventListener("click", () => {
+      const base=load();
+      const seeded=base.concat([
+        {id:uid(),empName:"سارة أحمد",empEmail:"sara@example.com",department:"التحول الرقمي",reqType:"AI_WORKSHOP",priority:"عادية",
+         title:"ورشة أساسيات الذكاء الاصطناعي التوليدي",details:"ورشة 3 ساعات للموظفين غير التقنيين مع تطبيقات عملية.",
+         createdAt:new Date(Date.now()-86400000*6).toISOString(),dueDate:isoDate(new Date(Date.now()+86400000*10)),status:"IN_PROGRESS",adminNotes:"تحديد المحاور والمدرب."},
+        {id:uid(),empName:"عبدالله سالم",empEmail:"abdullah@example.com",department:"تقنية المعلومات",reqType:"AI_TOOL",priority:"عالية",
+         title:"أداة تصنيف التذاكر تلقائياً",details:"تصنيف تذاكر الدعم واقتراح الردود مع إخفاء البيانات الحساسة.",
+         createdAt:new Date(Date.now()-86400000*12).toISOString(),dueDate:isoDate(new Date(Date.now()-86400000*1)),status:"IN_PROGRESS",adminNotes:"مراجعة مصادر البيانات."},
+        {id:uid(),empName:"ريم خالد",empEmail:"reem@example.com",department:"الموارد البشرية",reqType:"AI_APP",priority:"عادية",
+         title:"تطبيق طلبات الإجازات (واجهة بسيطة)",details:"تقديم إجازة + اعتماد المدير + إشعارات. تكامل لاحقاً.",
+         createdAt:new Date(Date.now()-86400000*2).toISOString(),dueDate:isoDate(new Date(Date.now()+86400000*21)),status:"NEW",adminNotes:"—"}
+      ]);
+      save(seeded); toast("تمت إضافة بيانات تجريبية."); renderAll();
+    });
+
+    document.getElementById("btn-clear-form").addEventListener("click", ()=>{
+      document.getElementById("request-form").reset();
+      document.getElementById("dueDate").value = isoDate(d0);
+    });
+
+    // Form submit: يحتاج تسجيل دخول
+    document.getElementById("request-form").addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const s = getSession();
+      if(!s){ toast("فضلاً سجّل الدخول أولاً."); openLogin(); return; }
+
+      const req={
+        id:uid(),
+        empName:document.getElementById("empName").value.trim(),
+        empEmail:document.getElementById("empEmail").value.trim(),
+        department:document.getElementById("department").value,
+        reqType:document.getElementById("reqType").value,
+        priority:document.getElementById("priority").value,
+        title:document.getElementById("title").value.trim(),
+        details:document.getElementById("details").value.trim(),
+        createdAt:new Date().toISOString(),
+        dueDate:document.getElementById("dueDate").value,
+        status:"NEW",
+        adminNotes:"",
+        submittedBy: s.user
+      };
+      const all=load(); all.unshift(req); save(all);
+      toast("تم إرسال الطلب بنجاح ✅");
+      document.getElementById("request-form").reset();
+      document.getElementById("dueDate").value=isoDate(d0);
+      renderAll();
+    });
+
+    // Export/Import (Admin only)
+    document.getElementById("btn-export").addEventListener("click", ()=>{
+      const s=getSession();
+      if(!s || s.role!=="ADMIN"){ toast("التصدير للمدير فقط."); openLogin(); return; }
+      const data=load();
+      const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(blob); a.download="ai-requests.json"; a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById("btn-import").addEventListener("click", ()=>{
+      const s=getSession();
+      if(!s || s.role!=="ADMIN"){ toast("الاستيراد للمدير فقط."); openLogin(); return; }
+      document.getElementById("importFile").click();
+    });
+
+    document.getElementById("importFile").addEventListener("change", async (e)=>{
+      const s=getSession();
+      if(!s || s.role!=="ADMIN"){ toast("الاستيراد للمدير فقط."); openLogin(); e.target.value=""; return; }
+      const file=e.target.files?.[0]; if(!file) return;
+      try{
+        const text=await file.text();
+        const arr=JSON.parse(text);
+        if(!Array.isArray(arr)) throw new Error("JSON غير صحيح");
+        save(arr); toast("تم الاستيراد بنجاح."); renderAll();
+      }catch(err){ alert("تعذر الاستيراد: "+err.message); }
+      finally{ e.target.value=""; }
+    });
+
+    // Filters
+    const q=document.getElementById("q");
+    const fStatus=document.getElementById("fStatus");
+    const fType=document.getElementById("fType");
+    const fDept=document.getElementById("fDept");
+    [q,fStatus,fType,fDept].forEach(el=>el.addEventListener("input", renderAll));
+
+    // -----------------------------
+    // Rendering
+    // -----------------------------
+    function renderAll(){
+      const raw=load();
+      const requests=normalizeStatuses(raw);
+      if(JSON.stringify(raw)!==JSON.stringify(requests)) save(requests);
+
+      document.getElementById("pill-count").textContent="عدد الطلبات: "+requests.length;
+      renderRecent(requests);
+
+      renderStats(requests);
+      renderBreakdowns(requests);
+      renderDeptFilterOptions(requests);
+      renderTable(requests);
+
+      applyAuth();
+    }
+
+    function renderRecent(requests){
+      const wrap=document.getElementById("recent");
+      wrap.innerHTML="";
+      const last=requests.slice(0,5);
+      if(last.length===0){ wrap.innerHTML=`<div class="muted">لا توجد طلبات بعد.</div>`; return; }
+      last.forEach(r=>{
+        const el=document.createElement("div");
+        el.className="card"; el.style.boxShadow="none"; el.style.borderRadius="14px"; el.style.padding="12px";
+        el.innerHTML=`
+          <div class="row" style="justify-content:space-between">
+            <div style="font-weight:900">${escapeHtml(r.title)}</div>
+            <span class="badge ${statusBadgeClass(r.status)}">${statusLabel(r.status)}</span>
+          </div>
+          <div class="muted" style="margin-top:6px;font-size:13px">
+            ${typeLabel(r.reqType)} • ${escapeHtml(r.department)} • استحقاق: ${fmtDate(r.dueDate)}
+          </div>
+          <div class="muted mono" style="margin-top:6px">${r.id}</div>
+        `;
+        wrap.appendChild(el);
+      });
+    }
+
+    function renderStats(requests){
+      document.getElementById("s-total").textContent=requests.length;
+      document.getElementById("s-inprogress").textContent=requests.filter(r=>r.status==="IN_PROGRESS").length;
+      document.getElementById("s-done").textContent=requests.filter(r=>r.status==="DONE").length;
+      document.getElementById("s-late").textContent=requests.filter(r=>r.status==="LATE").length;
+    }
+
+    function pct(n,d){return d?Math.round((n/d)*100):0}
+
+    function renderBreakdowns(requests){
+      const deptCounts={};
+      const typeCounts={AI_TOOL:0,AI_APP:0,AI_WORKSHOP:0};
+      requests.forEach(r=>{
+        deptCounts[r.department]=(deptCounts[r.department]||0)+1;
+        typeCounts[r.reqType]=(typeCounts[r.reqType]||0)+1;
+      });
+
+      const total=requests.length;
+
+      const byDept=document.getElementById("byDept");
+      byDept.innerHTML="";
+      const sortedDepts=Object.entries(deptCounts).sort((a,b)=>b[1]-a[1]);
+      if(sortedDepts.length===0){ byDept.innerHTML=`<div class="muted">لا توجد بيانات.</div>`; }
+      else sortedDepts.forEach(([name,count])=>byDept.appendChild(makeBar(name,count,pct(count,total))));
+
+      const byType=document.getElementById("byType");
+      byType.innerHTML="";
+      const types=[["🔧 أداة AI",typeCounts.AI_TOOL],["📱 تطبيق AI",typeCounts.AI_APP],["🎓 ورشة",typeCounts.AI_WORKSHOP]];
+      if(total===0){ byType.innerHTML=`<div class="muted">لا توجد بيانات.</div>`; }
+      else types.forEach(([name,count])=>byType.appendChild(makeBar(name,count,pct(count,total))));
+    }
+
+    function makeBar(name,count,percent){
+      const row=document.createElement("div");
+      row.className="bar";
+      row.innerHTML=`
+        <div class="name">${escapeHtml(name)}</div>
+        <div class="track"><div class="fill" style="width:${percent}%"></div></div>
+        <div class="pct">${count} (${percent}%)</div>
+      `;
+      return row;
+    }
+
+    function renderDeptFilterOptions(requests){
+      const values=[...new Set(requests.map(r=>r.department))].sort();
+      const current=fDept.value||"ALL";
+      fDept.innerHTML=`<option value="ALL">الكل</option>` + values.map(v=>`<option>${escapeHtml(v)}</option>`).join("");
+      fDept.value = values.includes(current) ? current : "ALL";
+    }
+
+    function renderTable(requests){
+      const tbody=document.getElementById("rows");
+      tbody.innerHTML="";
+      const qs=(q.value||"").trim().toLowerCase();
+      const st=fStatus.value, tp=fType.value, dp=fDept.value;
+
+      const filtered=requests.filter(r=>{
+        const effectiveStatus=computeLate(r)?"LATE":r.status;
+        if(st!=="ALL" && effectiveStatus!==st) return false;
+        if(tp!=="ALL" && r.reqType!==tp) return false;
+        if(dp!=="ALL" && r.department!==dp) return false;
+        if(qs){
+          const hay=(r.title+" "+r.details+" "+r.empName+" "+r.empEmail+" "+r.id).toLowerCase();
+          if(!hay.includes(qs)) return false;
+        }
+        return true;
+      });
+
+      if(filtered.length===0){
+        const tr=document.createElement("tr");
+        tr.innerHTML=`<td colspan="10" class="muted" style="padding:18px">لا توجد نتائج مطابقة.</td>`;
+        tbody.appendChild(tr); return;
+      }
+
+      filtered.forEach(r=>{
+        const effectiveStatus=computeLate(r)?"LATE":r.status;
+        const tr=document.createElement("tr");
+        tr.innerHTML=`
+          <td class="mono">${r.id}</td>
+          <td><div style="font-weight:900">${escapeHtml(r.empName)}</div><div class="muted" style="font-size:12.5px">${escapeHtml(r.empEmail)}</div></td>
+          <td>${escapeHtml(r.department)}</td>
+          <td>${typeLabel(r.reqType)}</td>
+          <td><span class="badge">${escapeHtml(r.priority)}</span></td>
+          <td>
+            <div style="font-weight:900">${escapeHtml(r.title)}</div>
+            <div class="muted" style="margin-top:6px;max-width:520px">${escapeHtml(r.details).slice(0,160)}${r.details.length>160?"…":""}</div>
+            ${r.adminNotes ? `<div class="muted" style="margin-top:8px"><strong>ملاحظات:</strong> ${escapeHtml(r.adminNotes)}</div>` : ``}
+            ${r.submittedBy ? `<div class="muted" style="margin-top:8px"><strong>أُرسل بواسطة:</strong> ${escapeHtml(r.submittedBy)}</div>` : ``}
+          </td>
+          <td>${fmtDate(r.createdAt.slice(0,10))}</td>
+          <td>${fmtDate(r.dueDate)}</td>
+          <td><span class="badge ${statusBadgeClass(effectiveStatus)}">${statusLabel(effectiveStatus)}</span></td>
+          <td>
+            <div class="row" style="gap:8px">
+              <select data-action="status" data-id="${r.id}" class="smallSelect">
+                <option value="NEW" ${r.status==="NEW"?"selected":""}>جديد</option>
+                <option value="IN_PROGRESS" ${r.status==="IN_PROGRESS"?"selected":""}>قيد المعالجة</option>
+                <option value="DONE" ${r.status==="DONE"?"selected":""}>مكتمل</option>
+              </select>
+              <input data-action="due" data-id="${r.id}" type="date" value="${escapeAttr(r.dueDate||"")}" style="width:160px" />
+              <input data-action="notes" data-id="${r.id}" placeholder="ملاحظات الإدارة…" value="${escapeAttr(r.adminNotes||"")}" style="width:220px" />
+              <button class="btn small danger" data-action="delete" data-id="${r.id}" type="button">حذف</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll("[data-action]").forEach(el=>{
+        el.addEventListener("change", onAdminEdit);
+        el.addEventListener("input", onAdminEdit);
+        el.addEventListener("click", onAdminEdit);
+      });
+
+      tbody.querySelectorAll(".smallSelect").forEach(s=>{
+        s.style.padding="8px 10px"; s.style.borderRadius="10px";
+        s.style.border="1px solid var(--stroke)"; s.style.fontFamily="inherit";
+        s.style.fontWeight="900"; s.style.background="#fff";
+      });
+    }
+
+    function onAdminEdit(e){
+      const s=getSession();
+      if(!s || s.role!=="ADMIN"){ toast("تعديل الطلبات للمدير فقط."); openLogin(); return; }
+
+      const action=e.target.getAttribute("data-action");
+      const id=e.target.getAttribute("data-id");
+      if(!action||!id) return;
+
+      const all=load();
+      const idx=all.findIndex(x=>x.id===id);
+      if(idx<0) return;
+
+      if(action==="delete"){
+        if(confirm("حذف الطلب؟")){
+          all.splice(idx,1); save(all); toast("تم حذف الطلب."); renderAll();
+        }
+        return;
+      }
+
+      if(action==="status") all[idx].status=e.target.value;
+      if(action==="due") all[idx].dueDate=e.target.value;
+      if(action==="notes") all[idx].adminNotes=e.target.value;
+
+      save(all); renderAll();
+    }
+
+    function escapeHtml(s){
+      return String(s||"").replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;", "\"":"&quot;","'":"&#039;" }[m]));
+    }
+    function escapeAttr(s){ return String(s||"").replace(/"/g, "&quot;"); }
+
+    function applyAuth(){
+      const s=getSession();
+      btnLogin.style.display = s ? "none" : "";
+      btnLogout.style.display = s ? "" : "none";
+
+      const isAdmin = s && s.role === "ADMIN";
+      tabAdm.disabled = !isAdmin;
+      tabAdm.style.opacity = isAdmin ? "1" : ".6";
+    }
+
+    // First render + auth
+    renderAll();
+    applyAuth();
+  </script>
+</body>
+</html>
